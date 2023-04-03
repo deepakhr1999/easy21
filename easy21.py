@@ -8,12 +8,11 @@ def sample_card():
 
 
 def dealer_step(state: tuple):
-    has_terminated, (player_sum, dealer_showing), reward = True, state, -1
+    done, (player_sum, dealer_showing), reward = True, state, -1
 
     # dealer hits till 17 and sticks after
     while 1 <= dealer_showing < 17:
         dealer_showing += sample_card()
-    next_state = player_sum, dealer_showing
 
     # sum is either negative or more than 17
     # sum not in valid_range -> player wins
@@ -28,17 +27,18 @@ def dealer_step(state: tuple):
     elif player_sum == dealer_showing:
         reward = 0
 
-    return has_terminated, next_state, reward
+    # but while returning, return dealer showing of the start state
+    return state, reward, done
 
 
 class Easy21:
     @staticmethod
-    def get_starting_state():
+    def reset():
         return abs(sample_card()), abs(sample_card())
 
     @staticmethod
     def step(state: tuple, action: str):
-        has_terminated = False
+        done = False
         next_state = state
         reward = 0
         # action is hit
@@ -47,10 +47,10 @@ class Easy21:
 
             # player goes bust and we return -1 reward
             if next_state[0] < 1 or next_state[0] > 21:
-                has_terminated, reward = True, -1
+                done, reward = True, -1
 
             # valid sum -> return with zero reward
-            return has_terminated, next_state, reward
+            return next_state, reward, done
 
         # when action is stick, we just play out the dealer
         return dealer_step(state)
@@ -58,14 +58,14 @@ class Easy21:
 
 def main():
     env = Easy21()
-    state = env.get_starting_state()
+    state = env.reset()
     print(state)
-    has_terminated, next_state, reward = env.step(state, "hit")
-    if not has_terminated:
-        has_terminated, next_state, reward = env.step(next_state, "hit")
-    if not has_terminated:
-        has_terminated, next_state, reward = env.step(next_state, "stick")
-    print(has_terminated, next_state, reward)
+    next_state, reward, done = env.step(state, "hit")
+    if not done:
+        next_state, reward, done = env.step(next_state, "hit")
+    if not done:
+        next_state, reward, done = env.step(next_state, "stick")
+    print(next_state, reward, done)
 
 
 if __name__ == "__main__":
